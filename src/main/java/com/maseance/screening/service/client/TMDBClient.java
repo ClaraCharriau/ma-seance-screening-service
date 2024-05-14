@@ -6,8 +6,11 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class TMDBClient {
@@ -28,9 +31,11 @@ public class TMDBClient {
                 .addHeader("Authorization", "Bearer " + TMDB_API_KEY)
                 .build();
 
-        Response response = TMDB_CLIENT.newCall(request).execute();
-
-        return response.body();
+        try (Response response = TMDB_CLIENT.newCall(request).execute()) {
+            return response.body();
+        } catch (Exception e) {
+            throw new ResponseStatusException(NOT_FOUND, "Could not get currently playing movies from TMDB.");
+        }
     }
 
     public ResponseBody getMovieDetails(String tmdbMovieId) throws IOException {
@@ -41,8 +46,10 @@ public class TMDBClient {
                 .addHeader("Authorization", "Bearer " + TMDB_API_KEY)
                 .build();
 
-        Response response = TMDB_CLIENT.newCall(request).execute();
-
-        return response.body();
+        try (Response response = TMDB_CLIENT.newCall(request).execute()) {
+            return response.body();
+        } catch (Exception e) {
+            throw new ResponseStatusException(NOT_FOUND, "Could not get movie details from TMDB.");
+        }
     }
 }

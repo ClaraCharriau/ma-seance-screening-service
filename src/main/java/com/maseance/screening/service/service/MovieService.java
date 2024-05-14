@@ -7,11 +7,14 @@ import com.maseance.screening.service.dto.MovieDto;
 import okhttp3.ResponseBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.StreamSupport;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class MovieService {
@@ -21,21 +24,16 @@ public class MovieService {
     ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public MovieDto getMovie(boolean extendedInfos, String tmdbMovieId) throws IOException {
-        JsonNode movieNode = getTMDBMovieDetails(tmdbMovieId);
+        JsonNode tmdbMovieDetails = getTMDBMovieDetails(tmdbMovieId);
 
         if (extendedInfos) {
-            return buildDetailedMovie(movieNode);
+            return buildDetailedMovieDto(tmdbMovieDetails);
         }
-        return buildMovie(movieNode);
+        return buildMovieDto(tmdbMovieDetails);
     }
 
     public List<MovieDto> getCurrentlyPlayingMovies(boolean extendedInfos) throws IOException {
-        ResponseBody tmdbResponseBody = tmdbClient.getCurrentlyPlaying();
-        JsonNode tmdbResponseNode = OBJECT_MAPPER.readValue(tmdbResponseBody.string(), JsonNode.class);
-
-        List<JsonNode> tmdbMovieList = StreamSupport
-                .stream(tmdbResponseNode.get("results").spliterator(), false)
-                .toList();
+        List<JsonNode> tmdbMovieList = getTMDBCurrentlyPlayingMovies();
 
         if (extendedInfos) {
             return buildDetailedMovieList(tmdbMovieList);
@@ -44,8 +42,27 @@ public class MovieService {
     }
 
     private JsonNode getTMDBMovieDetails(String tmdbMovieId) throws IOException {
-        ResponseBody tmdbResponseBody = tmdbClient.getMovieDetails(tmdbMovieId);
+        ResponseBody tmdbResponseBody;
+        try {
+            tmdbResponseBody = tmdbClient.getMovieDetails(tmdbMovieId);
+        } catch (Exception e) {
+            throw new ResponseStatusException(NOT_FOUND, "Could not get TMDB movie details for id : " + tmdbMovieId);
+        }
         return OBJECT_MAPPER.readValue(tmdbResponseBody.string(), JsonNode.class);
+    }
+
+    private List<JsonNode> getTMDBCurrentlyPlayingMovies() throws IOException {
+        ResponseBody tmdbResponseBody;
+        try {
+            tmdbResponseBody = tmdbClient.getCurrentlyPlaying();
+        } catch (Exception e) {
+            throw new ResponseStatusException(NOT_FOUND, "Could not get TMDB currently playing movies");
+        }
+        JsonNode tmdbResponseNode = OBJECT_MAPPER.readValue(tmdbResponseBody.string(), JsonNode.class);
+
+        return StreamSupport
+                .stream(tmdbResponseNode.get("results").spliterator(), false)
+                .toList();
     }
 
     private List<JsonNode> getTMDBMovieDetailsList(List<JsonNode> jsonNodeMovieList) throws IOException {
@@ -83,7 +100,7 @@ public class MovieService {
                 .toList();
     }
 
-    private MovieDto buildMovie(JsonNode movieNode) {
+    private MovieDto buildMovieDto(JsonNode movieNode) {
         return MovieDto.builder()
                 .id(movieNode.get("id").asText())
                 .title(movieNode.get("title").asText())
@@ -91,7 +108,7 @@ public class MovieService {
                 .build();
     }
 
-    private MovieDto buildDetailedMovie(JsonNode movieNode) {
+    private MovieDto buildDetailedMovieDto(JsonNode movieNode) {
         return MovieDto.builder()
                 .id(movieNode.get("id").asText())
                 .title(movieNode.get("title").asText())
@@ -109,13 +126,13 @@ public class MovieService {
 
     private List<MovieDto> buildMovieList(List<JsonNode> jsonNodeMovieList) {
         return jsonNodeMovieList.stream()
-                .map(this::buildMovie)
+                .map(this::buildMovieDto)
                 .toList();
     }
 
     private List<MovieDto> buildDetailedMovieList(List<JsonNode> jsonNodeMovieList) throws IOException {
         return getTMDBMovieDetailsList(jsonNodeMovieList).stream()
-                .map(this::buildDetailedMovie)
+                .map(this::buildDetailedMovieDto)
                 .toList();
     }
 }
