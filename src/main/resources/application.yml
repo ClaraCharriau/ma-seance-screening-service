@@ -12,10 +12,12 @@ spring:
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
   output:
     ansi:
       enabled: always
 server:
   servlet:
     context-path: /maseance/api
+  error:
+    include-message: always
