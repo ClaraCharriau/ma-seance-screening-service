@@ -1,7 +1,9 @@
 package com.maseance.screening.service.controller;
 
 import com.maseance.screening.service.dto.MovieDto;
+import com.maseance.screening.service.dto.MovieScreeningsDto;
 import com.maseance.screening.service.dto.TheaterDto;
+import com.maseance.screening.service.service.ScreeningService;
 import com.maseance.screening.service.service.TheaterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,9 +18,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/v1/theaters")
 public class TheaterController {
-
     @Autowired
     private TheaterService theaterService;
+    @Autowired
+    private ScreeningService screeningService;
 
     @GetMapping("/{id}")
     public TheaterDto getTheater(
@@ -32,5 +35,12 @@ public class TheaterController {
             @PathVariable("id") UUID theaterId
     ) throws IOException {
         return theaterService.getMoviesByTheaterId(theaterId);
+    }
+
+    @GetMapping("/{id}/screenings")
+    public List<MovieScreeningsDto> getScreeningsByTheater(
+            @PathVariable("id") UUID theaterId
+    ) throws IOException {
+        return screeningService.getMovieScreeningsByTheaterId(theaterId);
     }
 }
