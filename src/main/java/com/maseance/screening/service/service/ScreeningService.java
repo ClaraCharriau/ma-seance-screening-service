@@ -1,5 +1,7 @@
 package com.maseance.screening.service.service;
 
+import com.maseance.screening.service.dto.MovieDto;
+import com.maseance.screening.service.dto.MovieScreeningsDto;
 import com.maseance.screening.service.dto.ScheduleDto;
 import com.maseance.screening.service.dto.ScreeningDto;
 import com.maseance.screening.service.mapper.TheaterMapper;
@@ -10,7 +12,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -28,6 +34,27 @@ public class ScreeningService {
         var screening = screeningRepository.getReferenceById(screeningId);
 
         return buildScreeningDto(screening);
+    }
+
+    public List<MovieScreeningsDto> getMovieScreeningsByTheaterId(UUID theaterId) throws IOException {
+        var screenings = screeningRepository.getByTheaterId(theaterId);
+
+        List<ScreeningDto> screeningDtos = new ArrayList<>();
+        for (var screening : screenings) {
+            screeningDtos.add(buildScreeningDto(screening));
+        }
+
+        return buildMovieScreeningsDtos(screeningDtos);
+    }
+
+    private List<MovieScreeningsDto> buildMovieScreeningsDtos(List<ScreeningDto> screenings) {
+        Map<MovieDto, List<ScheduleDto>> movieToSchedulesMap = screenings.stream()
+                .collect(Collectors.groupingBy(ScreeningDto::movie,
+                        Collectors.mapping(ScreeningDto::schedule, Collectors.toList())));
+
+        return movieToSchedulesMap.entrySet().stream()
+                .map(entry -> new MovieScreeningsDto(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
     }
 
     private ScreeningDto buildScreeningDto(Screening screening) throws IOException {

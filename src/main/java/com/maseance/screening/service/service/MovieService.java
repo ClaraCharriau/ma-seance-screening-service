@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.maseance.screening.service.client.TMDBClient;
 import com.maseance.screening.service.dto.MovieDto;
+import com.maseance.screening.service.model.Movie;
 import okhttp3.ResponseBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.StreamSupport;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -31,6 +31,18 @@ public class MovieService {
             return buildDetailedMovieDto(tmdbMovieDetails);
         }
         return buildMovieDto(tmdbMovieDetails);
+    }
+
+    public List<MovieDto> getMoviesByTmdbId(List<Movie> movieEntities) throws IOException {
+        var tmdbIdList = movieEntities.stream()
+                .map(Movie::getTmdbId)
+                .toList();
+
+        List<MovieDto> movieDtos = new ArrayList<>();
+        for (var id : tmdbIdList) {
+            movieDtos.add(getMovieByTmdbId(false, id));
+        }
+        return movieDtos;
     }
 
     public List<MovieDto> getCurrentlyPlayingMovies(boolean extendedInfos) throws IOException {
