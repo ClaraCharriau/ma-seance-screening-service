@@ -9,4 +9,5 @@ public record TheaterDto(
         String address,
         String imagePath,
         String bookingPath
-) { }
+) {
+}

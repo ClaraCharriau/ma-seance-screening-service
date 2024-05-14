@@ -12,18 +12,19 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.StreamSupport;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class MovieService {
-    @Autowired
-    private TMDBClient tmdbClient;
     private final String YOUTUBE_PATH = "https://www.youtube.com/watch?v=";
     ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    @Autowired
+    private TMDBClient tmdbClient;
 
-    public MovieDto getMovie(boolean extendedInfos, String tmdbMovieId) throws IOException {
+    public MovieDto getMovieByTmdbId(boolean extendedInfos, String tmdbMovieId) throws IOException {
         JsonNode tmdbMovieDetails = getTMDBMovieDetails(tmdbMovieId);
 
         if (extendedInfos) {
@@ -100,6 +101,10 @@ public class MovieService {
                 .toList();
     }
 
+    private List<String> getGenres(JsonNode movieNode) {
+        return movieNode.get("genres").findValuesAsText("name").stream().limit(3).toList();
+    }
+
     private MovieDto buildMovieDto(JsonNode movieNode) {
         return MovieDto.builder()
                 .id(movieNode.get("id").asText())
@@ -120,7 +125,7 @@ public class MovieService {
                 .trailerLink(getTrailerLink(movieNode))
                 .cast(getCreditMembers(movieNode, "cast", "known_for_department", "Acting"))
                 .directors(getCreditMembers(movieNode, "crew", "job", "Director"))
-                .genres(movieNode.get("genres").findValuesAsText("name"))
+                .genres(getGenres(movieNode))
                 .build();
     }
 
