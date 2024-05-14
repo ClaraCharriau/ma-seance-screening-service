@@ -20,6 +20,15 @@ public class MovieService {
     private final String YOUTUBE_PATH = "https://www.youtube.com/watch?v=";
     ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+    public MovieDto getMovie(boolean extendedInfos, String tmdbMovieId) throws IOException {
+        JsonNode movieNode = getTMDBMovieDetails(tmdbMovieId);
+
+        if (extendedInfos) {
+            return buildDetailedMovie(movieNode);
+        }
+        return buildMovie(movieNode);
+    }
+
     public List<MovieDto> getCurrentlyPlayingMovies(boolean extendedInfos) throws IOException {
         ResponseBody tmdbResponseBody = tmdbClient.getCurrentlyPlaying();
         JsonNode tmdbResponseNode = OBJECT_MAPPER.readValue(tmdbResponseBody.string(), JsonNode.class);
@@ -74,32 +83,39 @@ public class MovieService {
                 .toList();
     }
 
+    private MovieDto buildMovie(JsonNode movieNode) {
+        return MovieDto.builder()
+                .id(movieNode.get("id").asText())
+                .title(movieNode.get("title").asText())
+                .posterLink(movieNode.get("poster_path").asText())
+                .build();
+    }
+
+    private MovieDto buildDetailedMovie(JsonNode movieNode) {
+        return MovieDto.builder()
+                .id(movieNode.get("id").asText())
+                .title(movieNode.get("title").asText())
+                .posterLink(movieNode.get("poster_path").asText())
+                .resume(movieNode.get("overview").asText())
+                .releaseDate(movieNode.get("release_date").asText())
+                .duration(movieNode.get("runtime").asInt())
+                .photoLink(movieNode.get("backdrop_path").asText())
+                .trailerLink(getTrailerLink(movieNode))
+                .cast(getCreditMembers(movieNode, "cast", "known_for_department", "Acting"))
+                .directors(getCreditMembers(movieNode, "crew", "job", "Director"))
+                .genres(movieNode.get("genres").findValuesAsText("name"))
+                .build();
+    }
+
     private List<MovieDto> buildMovieList(List<JsonNode> jsonNodeMovieList) {
         return jsonNodeMovieList.stream()
-                .map(movieNode -> MovieDto.builder()
-                        .id(movieNode.get("id").asText())
-                        .title(movieNode.get("title").asText())
-                        .posterLink(movieNode.get("poster_path").asText())
-                        .build())
+                .map(this::buildMovie)
                 .toList();
     }
 
     private List<MovieDto> buildDetailedMovieList(List<JsonNode> jsonNodeMovieList) throws IOException {
-        List<JsonNode> movieList = getTMDBMovieDetailsList(jsonNodeMovieList);
-
-        return movieList.stream()
-                .map(movieNode -> MovieDto.builder()
-                        .id(movieNode.get("id").asText())
-                        .title(movieNode.get("title").asText())
-                        .posterLink(movieNode.get("poster_path").asText())
-                        .resume(movieNode.get("overview").asText())
-                        .releaseDate(movieNode.get("release_date").asText())
-                        .duration(movieNode.get("runtime").asInt())
-                        .photoLink(movieNode.get("backdrop_path").asText())
-                        .trailerLink(getTrailerLink(movieNode))
-                        .cast(getCreditMembers(movieNode, "cast", "known_for_department", "Acting"))
-                        .directors(getCreditMembers(movieNode, "crew", "job", "Director"))
-                        .genres(movieNode.get("genres").findValuesAsText("name"))
-                        .build()).toList();
+        return getTMDBMovieDetailsList(jsonNodeMovieList).stream()
+                .map(this::buildDetailedMovie)
+                .toList();
     }
 }
