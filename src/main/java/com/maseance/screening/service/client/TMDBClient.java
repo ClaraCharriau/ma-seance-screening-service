@@ -6,8 +6,11 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class TMDBClient {
@@ -29,7 +32,6 @@ public class TMDBClient {
                 .build();
 
         Response response = TMDB_CLIENT.newCall(request).execute();
-
         return response.body();
     }
 
@@ -42,7 +44,6 @@ public class TMDBClient {
                 .build();
 
         Response response = TMDB_CLIENT.newCall(request).execute();
-
         return response.body();
     }
 }
