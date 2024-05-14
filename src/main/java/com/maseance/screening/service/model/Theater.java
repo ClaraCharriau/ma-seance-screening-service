@@ -1,23 +1,27 @@
 package com.maseance.screening.service.model;
 
-import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.util.UUID;
 
 @Entity
 @Data
 public class Theater {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id_theater")
-    private String id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
     @Column
     private String name;
+
     @Column
     private String address;
-    @Column(name = "image_path")
-    @Nullable
+
+    @Column(name = "image_path", nullable = true)
     private String imagePath;
+
     @Column(name = "booking_path")
     private String bookingPath;
 }

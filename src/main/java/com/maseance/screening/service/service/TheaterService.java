@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.UUID;
+
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
@@ -14,7 +16,7 @@ public class TheaterService {
     @Autowired
     private TheaterRepository theaterRepository;
 
-    public TheaterDto getTheaterById(String theaterId) {
+    public TheaterDto getTheaterById(UUID theaterId) {
         if (!theaterRepository.existsById(theaterId)) {
             throw new ResponseStatusException(NOT_FOUND, "Unable to find theater with id : " + theaterId);
         }

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/movies")
@@ -19,7 +20,7 @@ public class MovieController {
     public MovieDto getMovie(
             @PathVariable("id") String tmdbMovieId,
             @RequestParam(required = false, defaultValue = "false", name = "extended_infos") boolean extendedInfos) throws IOException {
-        return movieService.getMovie(extendedInfos, tmdbMovieId);
+        return movieService.getMovieByTmdbId(extendedInfos, tmdbMovieId);
     }
 
     @GetMapping("/currently")
