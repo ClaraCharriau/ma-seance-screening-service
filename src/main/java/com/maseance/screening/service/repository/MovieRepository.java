@@ -16,5 +16,5 @@ public interface MovieRepository extends JpaRepository<Movie, UUID> {
             "WHERE screening.id_theater = :theaterId", nativeQuery = true)
     List<Movie> getMoviesByTheaterId(@Param("theaterId") UUID theaterId);
 
-    List<Movie> findByTmdbId(@Param("tmdbId") String tmdbId);
+    List<Movie> findByTmdbId(String tmdbId);
 }
