@@ -38,4 +38,11 @@ public class MovieController {
             @RequestParam(required = false, defaultValue = "false", name = "extended_infos") boolean extendedInfos) throws IOException {
         return movieService.getCurrentlyPlayingMovies(extendedInfos);
     }
+
+    @GetMapping("/search")
+    public List<MovieDto> searchMovies(
+            @RequestParam String query
+    ) throws IOException {
+        return movieService.searchMovies(query);
+    }
 }
