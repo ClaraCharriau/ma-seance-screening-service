@@ -35,20 +35,14 @@ public class MovieService {
         var movieEntity = movieRepository.getReferenceById(movieId);
         JsonNode tmdbMovieDetails = getTMDBMovieDetails(movieEntity.getTmdbId());
 
-        if (extendedInfos) {
-            return buildDetailedMovieDto(tmdbMovieDetails, movieId);
-        }
-        return buildMovieDto(tmdbMovieDetails, movieId);
+        return buildMovieDto(tmdbMovieDetails, movieId, extendedInfos);
     }
 
     public MovieDto getMovieByTmdbId(boolean extendedInfos, String tmdbMovieId) throws IOException {
         JsonNode tmdbMovieDetails = getTMDBMovieDetails(tmdbMovieId);
         var movieId = getMovieIdByTmdbId(tmdbMovieDetails.get("id").asText());
 
-        if (extendedInfos) {
-            return buildDetailedMovieDto(tmdbMovieDetails, movieId);
-        }
-        return buildMovieDto(tmdbMovieDetails, movieId);
+        return buildMovieDto(tmdbMovieDetails, movieId, extendedInfos);
     }
 
     public List<MovieDto> getMoviesByTmdbId(List<Movie> movieEntities) throws IOException {
@@ -66,10 +60,13 @@ public class MovieService {
     public List<MovieDto> getCurrentlyPlayingMovies(boolean extendedInfos) throws IOException {
         List<JsonNode> tmdbMovieList = getTMDBCurrentlyPlayingMovies();
 
-        if (extendedInfos) {
-            return buildDetailedMovieDtoList(tmdbMovieList);
-        }
-        return buildMovieDtoList(tmdbMovieList);
+        return buildMovieDtoList(tmdbMovieList, extendedInfos);
+    }
+
+    public List<MovieDto> searchMovies(String query) throws IOException {
+        List<JsonNode> tmdbMovieList = searchTMDBMovies(query);
+
+        return buildSimpleMovieDtoList(tmdbMovieList);
     }
 
     private JsonNode getTMDBMovieDetails(String tmdbMovieId) throws IOException {
@@ -95,6 +92,21 @@ public class MovieService {
                 .stream(tmdbResponseNode.get("results").spliterator(), false)
                 .toList();
     }
+
+    private List<JsonNode> searchTMDBMovies(String query) throws IOException {
+        ResponseBody tmdbResponseBody;
+        try {
+            tmdbResponseBody = tmdbClient.searchTMDBMovies(query);
+        } catch (Exception e) {
+            throw new ResponseStatusException(NOT_FOUND, "Could not search TMDB movies with query : " + query);
+        }
+        JsonNode tmdbResponseNode = OBJECT_MAPPER.readValue(tmdbResponseBody.string(), JsonNode.class);
+
+        return StreamSupport
+                .stream(tmdbResponseNode.get("results").spliterator(), false)
+                .toList();
+    }
+
 
     private List<JsonNode> getTMDBMovieDetailsList(List<JsonNode> jsonNodeMovieList) throws IOException {
         var tmdbMovieIdList = jsonNodeMovieList.stream()
@@ -152,7 +164,21 @@ public class MovieService {
         return movieNode.get("genres").findValuesAsText("name").stream().limit(3).toList();
     }
 
-    private MovieDto buildMovieDto(JsonNode movieNode, UUID movieId) {
+    private MovieDto buildMovieDto(JsonNode tmdbMovieDetails, UUID movieId, boolean isDetailed) {
+        if (isDetailed) {
+            return buildDetailedMovieDto(tmdbMovieDetails, movieId);
+        }
+        return buildSimpleMovieDto(tmdbMovieDetails, movieId);
+    }
+
+    private List<MovieDto> buildMovieDtoList(List<JsonNode> tmdbMovieDetailsList, boolean isDetailed) throws IOException {
+        if (isDetailed) {
+            return buildDetailedMovieDtoList(tmdbMovieDetailsList);
+        }
+        return buildSimpleMovieDtoList(tmdbMovieDetailsList);
+    }
+
+    private MovieDto buildSimpleMovieDto(JsonNode movieNode, UUID movieId) {
         return MovieDto.builder()
                 .id(String.valueOf(movieId))
                 .title(movieNode.get("title").asText())
@@ -176,9 +202,9 @@ public class MovieService {
                 .build();
     }
 
-    private List<MovieDto> buildMovieDtoList(List<JsonNode> jsonNodeMovieList) {
+    private List<MovieDto> buildSimpleMovieDtoList(List<JsonNode> jsonNodeMovieList) {
         return jsonNodeMovieList.stream()
-                .map(movie -> buildMovieDto(movie,
+                .map(movie -> buildSimpleMovieDto(movie,
                         getMovieIdByTmdbId(movie.get("id").asText())))
                 .toList();
     }
