@@ -41,4 +41,9 @@ public class TheaterService {
         List<Movie> movieList = movieRepository.getMoviesByTheaterId(theaterId);
         return movieService.getMoviesByTmdbId(movieList);
     }
+
+    public List<TheaterDto> searchTheaters(String query) {
+        var theaterEntities = theaterRepository.findByNameOrAddressContainingIgnoreCase(query, query);
+        return TheaterMapper.INSTANCE.toDtos(theaterEntities);
+    }
 }
