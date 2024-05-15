@@ -15,4 +15,6 @@ public interface MovieRepository extends JpaRepository<Movie, UUID> {
     @Query(value = "SELECT movie.* FROM movie INNER JOIN screening ON movie.id_movie = screening.id_movie " +
             "WHERE screening.id_theater = :theaterId", nativeQuery = true)
     List<Movie> getMoviesByTheaterId(@Param("theaterId") UUID theaterId);
+
+    List<Movie> findByTmdbId(String tmdbId);
 }

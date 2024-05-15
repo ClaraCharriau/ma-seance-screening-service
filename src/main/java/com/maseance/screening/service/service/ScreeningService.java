@@ -1,9 +1,6 @@
 package com.maseance.screening.service.service;
 
-import com.maseance.screening.service.dto.MovieDto;
-import com.maseance.screening.service.dto.MovieScreeningsDto;
-import com.maseance.screening.service.dto.ScheduleDto;
-import com.maseance.screening.service.dto.ScreeningDto;
+import com.maseance.screening.service.dto.*;
 import com.maseance.screening.service.mapper.TheaterMapper;
 import com.maseance.screening.service.model.Screening;
 import com.maseance.screening.service.repository.ScreeningRepository;
@@ -47,6 +44,17 @@ public class ScreeningService {
         return buildMovieScreeningsDtos(screeningDtos);
     }
 
+    public List<TheaterScreeningsDto> getTheaterScreeningsByMovieId(UUID movieId) throws IOException {
+        var screenings = screeningRepository.getByMovieId(movieId);
+
+        List<ScreeningDto> screeningDtos = new ArrayList<>();
+        for (var screening : screenings) {
+            screeningDtos.add(buildScreeningDto(screening));
+        }
+
+        return buildTheaterScreeningsDtos(screeningDtos);
+    }
+
     private List<MovieScreeningsDto> buildMovieScreeningsDtos(List<ScreeningDto> screenings) {
         Map<MovieDto, List<ScheduleDto>> movieToSchedulesMap = screenings.stream()
                 .collect(Collectors.groupingBy(ScreeningDto::movie,
@@ -54,6 +62,16 @@ public class ScreeningService {
 
         return movieToSchedulesMap.entrySet().stream()
                 .map(entry -> new MovieScreeningsDto(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+    }
+
+    private List<TheaterScreeningsDto> buildTheaterScreeningsDtos(List<ScreeningDto> screenings) {
+        Map<TheaterDto, List<ScheduleDto>> theaterToSchedulesMap = screenings.stream()
+                .collect(Collectors.groupingBy(ScreeningDto::theater,
+                        Collectors.mapping(ScreeningDto::schedule, Collectors.toList())));
+
+        return theaterToSchedulesMap.entrySet().stream()
+                .map(entry -> new TheaterScreeningsDto(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
     }
 
