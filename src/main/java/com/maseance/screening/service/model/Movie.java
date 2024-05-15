@@ -1,12 +1,16 @@
 package com.maseance.screening.service.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.util.UUID;
 
 @Entity
-@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Movie {
     @Id
     @Column(name = "id_movie")
