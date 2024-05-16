@@ -66,7 +66,7 @@ public class MovieService {
     public List<MovieDto> searchMovies(String query) throws IOException {
         List<JsonNode> tmdbMovieList = searchTMDBMovies(query);
 
-        return buildSimpleMovieDtoList(tmdbMovieList);
+        return buildDetailedMovieDtoList(tmdbMovieList);
     }
 
     private JsonNode getTMDBMovieDetails(String tmdbMovieId) throws IOException {
