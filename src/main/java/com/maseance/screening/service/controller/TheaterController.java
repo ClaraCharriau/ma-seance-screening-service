@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/v1/theaters")
 public class TheaterController {
@@ -43,8 +44,8 @@ public class TheaterController {
 
     @GetMapping("/search")
     public List<TheaterDto> searchTheaters(
-            @RequestParam String query
+            @RequestParam String q
     ) {
-        return theaterService.searchTheaters(query);
+        return theaterService.searchTheaters(q);
     }
 }

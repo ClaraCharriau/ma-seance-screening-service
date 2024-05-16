@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/v1/movies")
 public class MovieController {
@@ -41,8 +42,8 @@ public class MovieController {
 
     @GetMapping("/search")
     public List<MovieDto> searchMovies(
-            @RequestParam String query
+            @RequestParam String q
     ) throws IOException {
-        return movieService.searchMovies(query);
+        return movieService.searchMovies(q);
     }
 }
