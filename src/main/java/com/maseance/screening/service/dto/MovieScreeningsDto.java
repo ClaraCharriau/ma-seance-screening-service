@@ -7,6 +7,6 @@ import java.util.List;
 @Builder
 public record MovieScreeningsDto(
         MovieDto movie,
-        List<ScheduleDto> schedule
+        List<ShowtimeDto> showtimes
 ) {
 }

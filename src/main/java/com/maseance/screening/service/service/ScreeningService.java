@@ -56,9 +56,10 @@ public class ScreeningService {
     }
 
     private List<MovieScreeningsDto> buildMovieScreeningsDtos(List<ScreeningDto> screenings) {
-        Map<MovieDto, List<ScheduleDto>> movieToSchedulesMap = screenings.stream()
+        Map<MovieDto, List<ShowtimeDto>> movieToSchedulesMap = screenings.stream()
                 .collect(Collectors.groupingBy(ScreeningDto::movie,
-                        Collectors.mapping(ScreeningDto::schedule, Collectors.toList())));
+                        Collectors.mapping(schedule -> buildShowtimeDto(schedule.id(), schedule.schedule()),
+                                Collectors.toList())));
 
         return movieToSchedulesMap.entrySet().stream()
                 .map(entry -> new MovieScreeningsDto(entry.getKey(), entry.getValue()))
@@ -66,13 +67,21 @@ public class ScreeningService {
     }
 
     private List<TheaterScreeningsDto> buildTheaterScreeningsDtos(List<ScreeningDto> screenings) {
-        Map<TheaterDto, List<ScheduleDto>> theaterToSchedulesMap = screenings.stream()
+        Map<TheaterDto, List<ShowtimeDto>> theaterToSchedulesMap = screenings.stream()
                 .collect(Collectors.groupingBy(ScreeningDto::theater,
-                        Collectors.mapping(ScreeningDto::schedule, Collectors.toList())));
+                        Collectors.mapping(schedule -> buildShowtimeDto(schedule.id(), schedule.schedule()),
+                                Collectors.toList())));
 
         return theaterToSchedulesMap.entrySet().stream()
                 .map(entry -> new TheaterScreeningsDto(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
+    }
+
+    private ShowtimeDto buildShowtimeDto(String id, ScheduleDto scheduleDto) {
+        return ShowtimeDto.builder()
+                .id(id)
+                .schedule(scheduleDto)
+                .build();
     }
 
     private ScreeningDto buildScreeningDto(Screening screening) throws IOException {
