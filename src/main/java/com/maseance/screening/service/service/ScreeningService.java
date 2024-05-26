@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +35,10 @@ public class ScreeningService {
         return buildScreeningDto(screening);
     }
 
-    public List<MovieScreeningsDto> getMovieScreeningsByTheaterId(UUID theaterId) throws IOException {
-        var screenings = screeningRepository.getByTheaterId(theaterId);
+    public List<MovieScreeningsDto> getMovieScreeningsByTheaterIdAndDay(UUID theaterId, int day) throws IOException {
+        var date = getDate(day);
+        var dateAndTimeLimit = date.atTime(LocalTime.MAX);
+        var screenings = screeningRepository.findByTheaterIdAndDateBetween(theaterId, date.atStartOfDay(), dateAndTimeLimit);
 
         List<ScreeningDto> screeningDtos = new ArrayList<>();
         for (var screening : screenings) {
@@ -44,8 +48,10 @@ public class ScreeningService {
         return buildMovieScreeningsDtos(screeningDtos);
     }
 
-    public List<TheaterScreeningsDto> getTheaterScreeningsByMovieId(UUID movieId) throws IOException {
-        var screenings = screeningRepository.getByMovieId(movieId);
+    public List<TheaterScreeningsDto> getTheaterScreeningsByMovieIdAndDay(UUID movieId, int day) throws IOException {
+        var date = getDate(day);
+        var dateAndTimeLimit = date.atTime(LocalTime.MAX);
+        var screenings = screeningRepository.findByMovieIdAndDateBetween(movieId, date.atStartOfDay(), dateAndTimeLimit);
 
         List<ScreeningDto> screeningDtos = new ArrayList<>();
         for (var screening : screenings) {
@@ -75,6 +81,10 @@ public class ScreeningService {
         return theaterToSchedulesMap.entrySet().stream()
                 .map(entry -> new TheaterScreeningsDto(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
+    }
+
+    private LocalDate getDate(int day) {
+        return LocalDate.now().plusDays(day - 1);
     }
 
     private ShowtimeDto buildShowtimeDto(String id, ScheduleDto scheduleDto) {
