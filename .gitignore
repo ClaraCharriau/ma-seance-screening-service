@@ -39,3 +39,4 @@ out/
 ### Secrets ###
 .env.local
 .env
+/postgres-data/

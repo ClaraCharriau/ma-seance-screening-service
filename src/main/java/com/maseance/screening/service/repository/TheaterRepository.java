@@ -11,9 +11,10 @@ import java.util.UUID;
 
 @Repository
 public interface TheaterRepository extends JpaRepository<Theater, UUID> {
-
     @Query(value = "SELECT * FROM Theater " +
             "WHERE LOWER(name) LIKE LOWER(CONCAT('%', :name, '%')) " +
             "OR LOWER(address) LIKE LOWER(CONCAT('%', :address, '%'))", nativeQuery = true)
     List<Theater> findByNameOrAddressContainingIgnoreCase(@Param("name") String name, @Param("address") String address);
+    Theater getTheaterByName(String name);
+    boolean existsByName(String name);
 }

@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface ScreeningRepository extends JpaRepository<Screening, UUID> {
     List<Screening> findByTheaterIdAndDateBetween(UUID theaterId, LocalDateTime startDate, LocalDateTime endDate);
     List<Screening> findByMovieIdAndDateBetween(UUID movieId, LocalDateTime startDate, LocalDateTime endDate);
+    void deleteByTheaterIdAndDateBetween(UUID theaterId, LocalDateTime startDate, LocalDateTime endDate);
 }

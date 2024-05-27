@@ -24,7 +24,7 @@ public class MovieController {
     public MovieDto getMovie(
             @PathVariable("id") UUID movieId,
             @RequestParam(required = false, defaultValue = "false", name = "extended_infos") boolean extendedInfos) throws IOException {
-        return movieService.getMovieById(extendedInfos, movieId);
+        return movieService.getMovieDtoById(extendedInfos, movieId);
     }
 
     @GetMapping("/{id}/screenings")

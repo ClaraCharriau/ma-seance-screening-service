@@ -21,3 +21,6 @@ server:
     context-path: /maseance/api
   error:
     include-message: always
+logging:
+  level:
+    root: INFO
