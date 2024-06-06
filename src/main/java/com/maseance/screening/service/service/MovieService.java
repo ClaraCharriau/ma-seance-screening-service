@@ -6,6 +6,7 @@ import com.maseance.screening.service.client.TMDBClient;
 import com.maseance.screening.service.dto.MovieDto;
 import com.maseance.screening.service.model.Movie;
 import com.maseance.screening.service.repository.MovieRepository;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.ResponseBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,19 +21,17 @@ import java.util.stream.StreamSupport;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
+@Slf4j
 public class MovieService {
-    private final String YOUTUBE_PATH = "https://www.youtube.com/watch?v=";
-    ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String YOUTUBE_PATH = "https://www.youtube.com/watch?v=";
+    ObjectMapper objectMapper = new ObjectMapper();
     @Autowired
     private TMDBClient tmdbClient;
     @Autowired
     private MovieRepository movieRepository;
 
-    public MovieDto getMovieById(boolean extendedInfos, UUID movieId) throws IOException {
-        if (!movieRepository.existsById(movieId)) {
-            throw new ResponseStatusException(NOT_FOUND, "Could not find movie by id : " + movieId);
-        }
-        var movieEntity = movieRepository.getReferenceById(movieId);
+    public MovieDto getMovieDtoById(boolean extendedInfos, UUID movieId) throws IOException {
+        var movieEntity = getMovieById(movieId);
         JsonNode tmdbMovieDetails = getTMDBMovieDetails(movieEntity.getTmdbId());
 
         return buildMovieDto(tmdbMovieDetails, movieId, extendedInfos);
@@ -69,6 +68,24 @@ public class MovieService {
         return buildDetailedMovieDtoList(tmdbMovieList);
     }
 
+    public Movie findMovieEntityByName(String movieName) throws IOException {
+        var firstTMDBMovieResult = searchTMDBMovies(movieName).stream().findFirst()
+                .orElse(null);
+
+        if (firstTMDBMovieResult != null ) {
+            return getMovieByTmdbId(firstTMDBMovieResult.get("id").asText());
+        }
+        log.warn("Could not find movie in TMDB with name : " + movieName);
+        return null;
+    }
+
+    private Movie getMovieById(UUID movieId) {
+        if (!movieRepository.existsById(movieId)) {
+            throw new ResponseStatusException(NOT_FOUND, "Could not find movie by id : " + movieId);
+        }
+        return movieRepository.getReferenceById(movieId);
+    }
+
     private JsonNode getTMDBMovieDetails(String tmdbMovieId) throws IOException {
         ResponseBody tmdbResponseBody;
         try {
@@ -76,7 +93,7 @@ public class MovieService {
         } catch (Exception e) {
             throw new ResponseStatusException(NOT_FOUND, "Could not get TMDB movie details for id : " + tmdbMovieId);
         }
-        return OBJECT_MAPPER.readValue(tmdbResponseBody.string(), JsonNode.class);
+        return objectMapper.readValue(tmdbResponseBody.string(), JsonNode.class);
     }
 
     private List<JsonNode> getTMDBCurrentlyPlayingMovies() throws IOException {
@@ -86,7 +103,7 @@ public class MovieService {
         } catch (Exception e) {
             throw new ResponseStatusException(NOT_FOUND, "Could not get TMDB currently playing movies");
         }
-        JsonNode tmdbResponseNode = OBJECT_MAPPER.readValue(tmdbResponseBody.string(), JsonNode.class);
+        JsonNode tmdbResponseNode = objectMapper.readValue(tmdbResponseBody.string(), JsonNode.class);
 
         return StreamSupport
                 .stream(tmdbResponseNode.get("results").spliterator(), false)
@@ -100,7 +117,7 @@ public class MovieService {
         } catch (Exception e) {
             throw new ResponseStatusException(NOT_FOUND, "Could not search TMDB movies with query : " + query);
         }
-        JsonNode tmdbResponseNode = OBJECT_MAPPER.readValue(tmdbResponseBody.string(), JsonNode.class);
+        JsonNode tmdbResponseNode = objectMapper.readValue(tmdbResponseBody.string(), JsonNode.class);
 
         return StreamSupport
                 .stream(tmdbResponseNode.get("results").spliterator(), false)
@@ -121,13 +138,17 @@ public class MovieService {
     }
 
     private UUID getMovieIdByTmdbId(String tmdbId) {
+        return getMovieByTmdbId(tmdbId).getId();
+    }
+
+    private Movie getMovieByTmdbId(String tmdbId) {
         var movieEntities = movieRepository.findByTmdbId(tmdbId);
         if (movieEntities.isEmpty()) {
             // If movie does not exist in database, we need to create and save it first.
             saveMovie(tmdbId);
-            return getMovieIdByTmdbId(tmdbId);
+            return getMovieByTmdbId(tmdbId);
         }
-        return movieEntities.stream().findFirst().get().getId();
+        return movieEntities.stream().findFirst().get();
     }
 
     private void saveMovie(String tmdbId) {

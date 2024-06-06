@@ -4,6 +4,7 @@ import com.maseance.screening.service.dto.MovieDto;
 import com.maseance.screening.service.dto.TheaterDto;
 import com.maseance.screening.service.mapper.TheaterMapper;
 import com.maseance.screening.service.model.Movie;
+import com.maseance.screening.service.model.Theater;
 import com.maseance.screening.service.repository.MovieRepository;
 import com.maseance.screening.service.repository.TheaterRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,13 @@ public class TheaterService {
         }
         var theaterEntity = theaterRepository.getReferenceById(theaterId);
         return TheaterMapper.INSTANCE.toDto(theaterEntity);
+    }
+
+    public Theater getTheaterByName(String theaterName) {
+        if (!theaterRepository.existsByName(theaterName)) {
+            throw new ResponseStatusException(NOT_FOUND, "Unable to find theater with name : " + theaterName);
+        }
+        return theaterRepository.getTheaterByName(theaterName);
     }
 
     public List<MovieDto> getMoviesByTheaterId(UUID theaterId) throws IOException {

@@ -17,6 +17,6 @@ public class Movie {
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID id;
 
-    @Column(length = 12, unique = true, name = "id_tmdb")
+    @Column(length = 15, unique = true, name = "id_tmdb")
     String tmdbId;
 }
