@@ -170,13 +170,13 @@ public class MovieService {
     private List<String> getCreditMembers(JsonNode movieNode,
                                           String creditCategory,
                                           String filterName,
-                                          String JobName) {
+                                          String jobName) {
         int CREDITS_NAME_LIMIT = 5;
 
         return StreamSupport.stream(movieNode.get("credits").get(creditCategory).spliterator(), false)
                 .limit(CREDITS_NAME_LIMIT)
                 .filter(memberNode -> memberNode != null &&
-                        memberNode.get(filterName).asText().equals(JobName))
+                        memberNode.get(filterName).asText().equals(jobName))
                 .map(memberNode -> memberNode.get("name").asText())
                 .toList();
     }

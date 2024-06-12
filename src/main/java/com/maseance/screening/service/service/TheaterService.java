@@ -46,7 +46,7 @@ public class TheaterService {
             throw new ResponseStatusException(NOT_FOUND, "Unable to find theater with id : " + theaterId);
         }
 
-        List<Movie> movieList = movieRepository.getMoviesByTheaterId(theaterId);
+        List<Movie> movieList = movieRepository.getMoviesByTheaterId(theaterId).stream().distinct().toList();
         return movieService.getMoviesByTmdbId(movieList);
     }
 
