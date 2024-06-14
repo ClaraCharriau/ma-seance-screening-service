@@ -8,7 +8,6 @@ import com.maseance.screening.service.model.Movie;
 import com.maseance.screening.service.repository.MovieRepository;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ResponseBody;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -25,9 +24,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class MovieService {
     private static final String YOUTUBE_PATH = "https://www.youtube.com/watch?v=";
     ObjectMapper objectMapper = new ObjectMapper();
-    @Autowired
     private TMDBClient tmdbClient;
-    @Autowired
     private MovieRepository movieRepository;
 
     public MovieDto getMovieDtoById(boolean extendedInfos, UUID movieId) throws IOException {
@@ -37,7 +34,7 @@ public class MovieService {
         return buildMovieDto(tmdbMovieDetails, movieId, extendedInfos);
     }
 
-    public MovieDto getMovieByTmdbId(boolean extendedInfos, String tmdbMovieId) throws IOException {
+    public MovieDto getMovieDtoByTmdbId(boolean extendedInfos, String tmdbMovieId) throws IOException {
         JsonNode tmdbMovieDetails = getTMDBMovieDetails(tmdbMovieId);
         var movieId = getMovieIdByTmdbId(tmdbMovieDetails.get("id").asText());
 
@@ -51,7 +48,7 @@ public class MovieService {
 
         List<MovieDto> movieDtos = new ArrayList<>();
         for (var id : tmdbIdList) {
-            movieDtos.add(getMovieByTmdbId(false, id));
+            movieDtos.add(getMovieDtoByTmdbId(false, id));
         }
         return movieDtos;
     }
@@ -72,8 +69,8 @@ public class MovieService {
         var firstTMDBMovieResult = searchTMDBMovies(movieName).stream().findFirst()
                 .orElse(null);
 
-        if (firstTMDBMovieResult != null ) {
-            return getMovieByTmdbId(firstTMDBMovieResult.get("id").asText());
+        if (firstTMDBMovieResult != null) {
+            return getMovieDtoByTmdbId(firstTMDBMovieResult.get("id").asText());
         }
         log.warn("Could not find movie in TMDB with name : " + movieName);
         return null;
@@ -87,22 +84,12 @@ public class MovieService {
     }
 
     private JsonNode getTMDBMovieDetails(String tmdbMovieId) throws IOException {
-        ResponseBody tmdbResponseBody;
-        try {
-            tmdbResponseBody = tmdbClient.getMovieDetails(tmdbMovieId);
-        } catch (Exception e) {
-            throw new ResponseStatusException(NOT_FOUND, "Could not get TMDB movie details for id : " + tmdbMovieId);
-        }
+        ResponseBody tmdbResponseBody = tmdbClient.getMovieDetails(tmdbMovieId);
         return objectMapper.readValue(tmdbResponseBody.string(), JsonNode.class);
     }
 
     private List<JsonNode> getTMDBCurrentlyPlayingMovies() throws IOException {
-        ResponseBody tmdbResponseBody;
-        try {
-            tmdbResponseBody = tmdbClient.getCurrentlyPlaying();
-        } catch (Exception e) {
-            throw new ResponseStatusException(NOT_FOUND, "Could not get TMDB currently playing movies");
-        }
+        ResponseBody tmdbResponseBody = tmdbClient.getCurrentlyPlaying();
         JsonNode tmdbResponseNode = objectMapper.readValue(tmdbResponseBody.string(), JsonNode.class);
 
         return StreamSupport
@@ -111,12 +98,7 @@ public class MovieService {
     }
 
     private List<JsonNode> searchTMDBMovies(String query) throws IOException {
-        ResponseBody tmdbResponseBody;
-        try {
-            tmdbResponseBody = tmdbClient.searchTMDBMovies(query);
-        } catch (Exception e) {
-            throw new ResponseStatusException(NOT_FOUND, "Could not search TMDB movies with query : " + query);
-        }
+        ResponseBody tmdbResponseBody = tmdbClient.searchTMDBMovies(query);
         JsonNode tmdbResponseNode = objectMapper.readValue(tmdbResponseBody.string(), JsonNode.class);
 
         return StreamSupport
@@ -138,15 +120,15 @@ public class MovieService {
     }
 
     private UUID getMovieIdByTmdbId(String tmdbId) {
-        return getMovieByTmdbId(tmdbId).getId();
+        return getMovieDtoByTmdbId(tmdbId).getId();
     }
 
-    private Movie getMovieByTmdbId(String tmdbId) {
+    private Movie getMovieDtoByTmdbId(String tmdbId) {
         var movieEntities = movieRepository.findByTmdbId(tmdbId);
         if (movieEntities.isEmpty()) {
             // If movie does not exist in database, we need to create and save it first.
             saveMovie(tmdbId);
-            return getMovieByTmdbId(tmdbId);
+            return getMovieDtoByTmdbId(tmdbId);
         }
         return movieEntities.stream().findFirst().get();
     }
@@ -155,6 +137,7 @@ public class MovieService {
         var movie = Movie.builder()
                 .id(UUID.randomUUID())
                 .tmdbId(tmdbId).build();
+        log.info("Inserting new movie in database with id : " + movie.getId());
         movieRepository.save(movie);
     }
 
@@ -171,13 +154,12 @@ public class MovieService {
                                           String creditCategory,
                                           String filterName,
                                           String jobName) {
-        int CREDITS_NAME_LIMIT = 5;
+        int creditsNameLimit = 5;
 
         return StreamSupport.stream(movieNode.get("credits").get(creditCategory).spliterator(), false)
-                .limit(CREDITS_NAME_LIMIT)
-                .filter(memberNode -> memberNode != null &&
-                        memberNode.get(filterName).asText().equals(jobName))
+                .filter(memberNode -> memberNode.get(filterName).asText().equals(jobName))
                 .map(memberNode -> memberNode.get("name").asText())
+                .limit(creditsNameLimit)
                 .toList();
     }
 
