@@ -163,7 +163,7 @@ public class ScreeningService {
     }
 
     private ScreeningDto buildScreeningDto(Screening screening) throws IOException {
-        var movie = movieService.getMovieByTmdbId(true, screening.getMovie().getTmdbId());
+        var movie = movieService.getMovieDtoByTmdbId(true, screening.getMovie().getTmdbId());
 
         return ScreeningDto.builder()
                 .id(screening.getId().toString())
