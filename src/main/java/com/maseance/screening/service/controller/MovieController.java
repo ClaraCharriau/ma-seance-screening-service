@@ -30,9 +30,10 @@ public class MovieController {
     @GetMapping("/{id}/screenings")
     public List<TheaterScreeningsDto> getScreeningsByMovie(
             @PathVariable("id") UUID movieId,
-            @RequestParam int day
+            @RequestParam int day,
+            @RequestParam(required = false) UUID userId
     ) throws IOException {
-        return screeningService.getTheaterScreeningsByMovieIdAndDay(movieId, day);
+        return screeningService.getTheaterScreeningsByMovieIdAndDay(movieId, day, userId);
     }
 
     @GetMapping("/currently")

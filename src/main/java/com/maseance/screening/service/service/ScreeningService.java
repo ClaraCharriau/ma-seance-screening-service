@@ -59,10 +59,19 @@ public class ScreeningService {
         return buildMovieScreeningsDtos(screeningDtos);
     }
 
-    public List<TheaterScreeningsDto> getTheaterScreeningsByMovieIdAndDay(UUID movieId, int day) throws IOException {
+    /**
+     * Retrieves a list of theater screenings for a given movie on a specific day and filter by user favorite theaters
+     *
+     * @param movieId the UUID of the movie for which screenings are to be retrieved
+     * @param day an integer representing the day offset from the current date (1 for today, 2 for tomorrow, etc.)
+     * @param userId the UUID of the user requesting the screenings
+     * @return a list of {@link TheaterScreeningsDto} objects representing the theater screenings
+     * @throws IOException if an I/O error occurs while retrieving the screenings
+     */
+    public List<TheaterScreeningsDto> getTheaterScreeningsByMovieIdAndDay(UUID movieId, int day, UUID userId) throws IOException {
         var date = getDate(day);
         var dateAndTimeLimit = date.atTime(LocalTime.MAX);
-        var screenings = screeningRepository.findByMovieIdAndDateBetween(movieId, date.atStartOfDay(), dateAndTimeLimit);
+        var screenings = screeningRepository.findScreeningsByMovieIdAndDateRangeAndUserId(movieId, date.atStartOfDay(), dateAndTimeLimit, userId);
 
         List<ScreeningDto> screeningDtos = new ArrayList<>();
         for (var screening : screenings) {
@@ -76,8 +85,8 @@ public class ScreeningService {
      * Update screenings in database by theater name
      * Carefully enter a theaterName that matches the name in database
      *
-     * @param theaterName
-     * @throws IOException
+     * @param theaterName - the name of the theater
+     * @throws IOException - if an I/O error occurs while updating the screenings
      */
     public void updateScreeningsByTheaterName(String theaterName) throws IOException {
         var googleShowtimesResponse = GoogleShowtimesScrapper.getGoogleShowtimesByTheaterName(theaterName);
