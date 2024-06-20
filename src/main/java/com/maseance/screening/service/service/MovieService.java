@@ -219,6 +219,18 @@ public class MovieService {
         return getTMDBMovieDetailsList(jsonNodeMovieList).stream()
                 .map(movie -> buildDetailedMovieDto(movie,
                         getMovieIdByTmdbId(movie.get("id").asText())))
+                .filter(this::filterUncleanMovieDto)
                 .toList();
+    }
+
+    private boolean filterUncleanMovieDto(MovieDto movieDto) {
+        return movieDto.directors() != null &&
+                !movieDto.directors().isEmpty() &&
+                movieDto.duration() != null &&
+                movieDto.duration() > 0 &&
+                movieDto.releaseDate() != null &&
+                !movieDto.releaseDate().isEmpty() &&
+                movieDto.title() != null &&
+                !movieDto.title().isEmpty();
     }
 }
