@@ -13,7 +13,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -53,5 +55,10 @@ public class TheaterService {
     public List<TheaterDto> searchTheaters(String query) {
         var theaterEntities = theaterRepository.findByNameOrAddressContainingIgnoreCase(query, query);
         return TheaterMapper.INSTANCE.toDtos(theaterEntities);
+    }
+
+    public Set<String> getAllTheaterNames() {
+        var theaterEntities = theaterRepository.findAll();
+        return theaterEntities.stream().map(Theater::getName).collect(Collectors.toSet());
     }
 }

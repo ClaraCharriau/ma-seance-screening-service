@@ -92,7 +92,7 @@ public class ScreeningService {
         var googleShowtimesResponse = GoogleShowtimesScrapper.getGoogleShowtimesByTheaterName(theaterName);
 
         var theater = theaterService.getTheaterByName(theaterName);
-        cleanScreenings(theater);
+        //cleanScreenings(theater);
 
         for (GoogleShowtimesResponse.MovieShowtimes movieShowtimes : googleShowtimesResponse.movieShowtimes()) {
             addNewScreenings(movieShowtimes, theater);

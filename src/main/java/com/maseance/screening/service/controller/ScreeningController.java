@@ -1,5 +1,6 @@
 package com.maseance.screening.service.controller;
 
+import com.maseance.screening.service.batch.UpdateScreeningsBatch;
 import com.maseance.screening.service.dto.ScreeningDto;
 import com.maseance.screening.service.service.ScreeningService;
 import jakarta.transaction.Transactional;
@@ -15,6 +16,8 @@ import java.util.UUID;
 public class ScreeningController {
     @Autowired
     private ScreeningService screeningService;
+    @Autowired
+    private UpdateScreeningsBatch updateScreeningsBatch;
 
     @GetMapping("/{id}")
     public ScreeningDto getScreening(@PathVariable("id") UUID screeningId) throws IOException {
@@ -22,8 +25,8 @@ public class ScreeningController {
     }
 
     @Transactional
-    @GetMapping("/update/{id}")
-    public void updateScreenings(@PathVariable("id") String theaterName) throws IOException {
-        screeningService.updateScreeningsByTheaterName(theaterName);
+    @GetMapping("/update")
+    public void updateScreenings() throws IOException {
+        updateScreeningsBatch.processAllTheatersScreenings();
     }
 }
