@@ -16,7 +16,7 @@ public class DateUtils {
     private static final Locale LOCALE = Locale.FRENCH;
     private static final DateTimeFormatter DAY_FORMAT = DateTimeFormatter.ofPattern("EEEE", LOCALE);
     private static final DateTimeFormatter DAY_NUMBER_FORMAT = DateTimeFormatter.ofPattern("dd", LOCALE);
-    private static final DateTimeFormatter MONTH_FORMAT = DateTimeFormatter.ofPattern("MMMM", LOCALE);
+    private static final DateTimeFormatter MONTH_FORMAT = DateTimeFormatter.ofPattern("MMM", LOCALE);
     private static final DateTimeFormatter YEAR_FORMAT = DateTimeFormatter.ofPattern("yyyy", LOCALE);
     private static final DateTimeFormatter HOUR_FORMAT = DateTimeFormatter.ofPattern("HH:mm", LOCALE);
 
